@@ -181,7 +181,6 @@ class foreman::config::passenger(
       }
 
       $bundle_cert_dir = '/usr/share/foreman/ssl'
-      $client_bundle = "${bundle_cert_dir}/client_bundle.pem"
 
       file { $bundle_cert_dir:
         ensure => 'directory',
@@ -190,26 +189,9 @@ class foreman::config::passenger(
         mode   => '0750',
       }
 
-      concat {$client_bundle:
-        owner => 'root',
-        group => $::foreman::group,
-        mode  => '0640',
-      }
-
-      concat::fragment{ 'client_key':
-        target => $client_bundle,
-        source => $client_key,
-        order  => '01',
-      }
-
-      concat::fragment{ 'client_cert':
-        target => $client_bundle,
-        source => $client_cert,
-        order  => '02',
-      }
-
-      $infrastructure_url = "https://${servername}:${infrastructure_port}"
+      $infrastructure_url = "https://${servername}:${infrastructure_port}/"
       $infrastructure_redirection_path = '/'
+
       apache::vhost { 'foreman-ssl':
         add_default_charset => 'UTF-8',
         docroot             => $docroot,
@@ -236,8 +218,7 @@ class foreman::config::passenger(
           'reverse_urls' => [$infrastructure_redirection_path, $infrastructure_url]
         }],
         custom_fragment     => "
-        SSLProxyCACertificateFile ${client_ca}
-        SSLProxyMachineCertificateFile ${client_bundle}
+  SSLProxyCACertificateFile \"${client_ca}\"
         ",
       }
     }
