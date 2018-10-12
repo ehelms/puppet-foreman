@@ -12,6 +12,7 @@ class foreman::params {
   # Enable users authentication (default user:admin pw:changeme)
   $authentication = true
   # configure foreman via apache and passenger
+  $puma           = true
   $passenger      = true
   # Enclose apache configuration in <VirtualHost>...</VirtualHost>
   $use_vhost      = true

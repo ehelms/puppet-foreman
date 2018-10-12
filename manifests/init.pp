@@ -53,6 +53,8 @@
 # $authentication::               Enable user authentication. Initial credentials are set using admin_username
 #                                 and admin_password.
 #
+# $puma::                    Configure foreman via apache and puma
+#
 # $passenger::                    Configure foreman via apache and passenger
 #
 # $passenger_ruby::               Ruby interpreter used to run Foreman under Passenger
@@ -71,7 +73,7 @@
 # $ssl::                          Enable and set require_ssl in Foreman settings (note: requires passenger, SSL does not apply to kickstarts)
 #
 # $custom_repo::                  No need to change anything here by default
-#                                 if set to true, no repo will be added by this module, letting you 
+#                                 if set to true, no repo will be added by this module, letting you
 #                                 set it to some custom location.
 #
 # $repo::                         This can be stable, nightly or a specific version i.e. 1.7
@@ -316,6 +318,7 @@ class foreman (
   Stdlib::Port $dynflow_pool_size = $::foreman::params::dynflow_pool_size,
   String $jobs_service = $::foreman::params::jobs_service,
   Boolean $hsts_enabled = $::foreman::params::hsts_enabled,
+  Boolean $puma = $::foreman::params::puma,
 ) inherits foreman::params {
   if $db_adapter == 'UNSET' {
     $db_adapter_real = $::foreman::db_type ? {

@@ -75,6 +75,10 @@ class foreman::config {
     ensure  => absent,
   }
 
+  if $::foreman::puma {
+    class { '::foreman::config::puma': } -> anchor { 'foreman::config_end': }
+  }
+
   if $::foreman::passenger  {
     class { '::foreman::config::passenger': } -> anchor { 'foreman::config_end': }
 
