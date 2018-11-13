@@ -8,7 +8,6 @@ describe 'foreman::config::apache' do
         {
           app_root: '/usr/share/foreman',
           listen_on_interface: '192.168.0.1',
-          ruby: '/usr/bin/tfm-ruby',
           priority: '05',
           servername: facts[:fqdn],
           serveraliases: ['foreman', 'also.foreman'],
@@ -21,16 +20,19 @@ describe 'foreman::config::apache' do
           ssl_crl: '/crl.pem',
           ssl_protocol: '-all +TLSv1.2',
           user: 'foreman',
-          prestart: true,
-          min_instances: 1,
-          start_timeout: 90,
+          passenger: true,
+          passenger_ruby: '/usr/bin/tfm-ruby',
+          passenger_prestart: true,
+          passenger_min_instances: 1,
+          passenger_start_timeout: 90,
           foreman_url: "https://#{facts[:fqdn]}",
           keepalive: true,
           max_keepalive_requests: 100,
           keepalive_timeout: 5,
           server_port: 80,
           server_ssl_port: 443,
-          ipa_authentication: false
+          ipa_authentication: false,
+          selinux: true
         }
       end
 
@@ -43,11 +45,14 @@ describe 'foreman::config::apache' do
         end
       end
 
-      describe 'with minimal parameters' do
+      describe 'with passenger' do
+        let(:params) { super().merge(passenger: true) }
         it 'should include apache with modules' do
           should contain_class('apache')
           should contain_class('apache::mod::headers')
           should contain_class('apache::mod::passenger')
+          should_not contain_class('apache::mod::proxy')
+          should_not contain_class('apache::mod::proxy_http')
         end
 
         it 'should ensure ownership' do
@@ -58,7 +63,6 @@ describe 'foreman::config::apache' do
 
       describe 'with ssl' do
         let(:params) { super().merge(ssl: true) }
-
 
         it 'should not contain the docroot' do
           should_not contain_file('/usr/share/foreman/public')
@@ -197,6 +201,52 @@ describe 'foreman::config::apache' do
             should contain_apache__vhost('foreman').with_passenger_pre_start("http://#{facts[:fqdn]}:8080")
             should contain_apache__vhost('foreman-ssl').with_port(8443)
             should contain_apache__vhost('foreman-ssl').with_passenger_pre_start("https://#{facts[:fqdn]}:8443")
+          end
+        end
+
+        context 'without passenger' do
+          let(:params) { super().merge(passenger: false) }
+
+          describe 'with ssl' do
+            let(:params) { super().merge(ssl: true) }
+
+            it { should compile.with_all_deps }
+            it { should contain_class('apache::mod::proxy') }
+            it { should contain_class('apache::mod::proxy_http') }
+            it { should_not contain_class('apache::mod::passenger') }
+            it do
+              should contain_apache__vhost('foreman')
+                .with_passenger(nil)
+                .with_proxy_preserve_host(true)
+                .with_proxy_add_headers(true)
+                .with_request_headers(['set X_FORWARDED_PROTO "http"'])
+                .with_proxy_pass(
+                  "no_proxy_uris" => ['/pulp', '/streamer', '/pub'],
+                  "path"          => '/',
+                  "url"           => 'http://localhost:3000/',
+                  "params"        => { "retry" => '0' },
+                )
+            end
+
+            it do
+              should contain_apache__vhost('foreman-ssl')
+                .with_passenger(nil)
+                .with_proxy_preserve_host(true)
+                .with_proxy_add_headers(true)
+                .with_request_headers([
+                  'set X_FORWARDED_PROTO "https"',
+                  'set SSL_CLIENT_S_DN "%{SSL_CLIENT_S_DN}s"',
+                  'set SSL_CLIENT_CERT "%{SSL_CLIENT_CERT}s"',
+                  'set SSL_CLIENT_VERIFY "%{SSL_CLIENT_VERIFY}s"'
+                ])
+                .with_ssl_proxyengine(true)
+                .with_proxy_pass(
+                  "no_proxy_uris" => ['/pulp', '/streamer', '/pub'],
+                  "path"          => '/',
+                  "url"           => 'http://localhost:3000/',
+                  "params"        => { "retry" => '0' },
+                )
+            end
           end
         end
       end
