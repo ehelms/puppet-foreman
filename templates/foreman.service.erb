@@ -1,0 +1,19 @@
+[Unit]
+Description=Foreman
+Wants=syslog.service
+
+[Service]
+Restart=always
+RestartSec=30
+TimeoutStartSec=0
+TimeoutSec=300
+ExecStartPre=-/usr/bin/podman pull quay.io/foreman/foreman:latest
+ExecStartPre=-/usr/bin/podman rm "foreman-1"
+ExecStart=/usr/bin/podman run --name foreman-1 --env-file /etc/sysconfig/foreman --net host -v /etc/foreman:/etc/foreman:z -p 3000 quay.io/foreman/foreman:latest
+ExecReload=-/usr/bin/podman stop "foreman-1"
+ExecReload=-/usr/bin/podman rm "foreman-1"
+ExecStop=-/usr/bin/podman stop "foreman-1"
+EnvironmentFile=-/etc/sysconfig/foreman
+
+[Install]
+WantedBy=multi-user.target

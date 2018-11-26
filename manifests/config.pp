@@ -78,6 +78,10 @@ class foreman::config {
   if $::foreman::apache  {
     contain foreman::config::apache
 
+    if $foreman::container {
+      ensure_packages(['podman'])
+    }
+
     if $::foreman::ipa_authentication {
       unless 'ipa' in $facts and 'default_server' in $facts['ipa'] and 'default_realm' in $facts['ipa'] {
         fail("${::hostname}: The system does not seem to be IPA-enrolled")

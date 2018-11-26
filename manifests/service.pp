@@ -2,6 +2,7 @@
 class foreman::service(
   Boolean $apache = $::foreman::apache,
   Boolean $passenger = $::foreman::passenger,
+  Boolean $container = $::foreman::container,
   Stdlib::Absolutepath $app_root = $::foreman::app_root,
   Boolean $ssl = $::foreman::ssl,
   String $jobs_service = $::foreman::jobs_service,
@@ -40,6 +41,17 @@ class foreman::service(
     # Relationship is duplicated there as defined() is parse-order dependent
     if $ssl and defined(Class['puppet::server::config']) {
       Class['puppet::server::config'] -> Class['foreman::service']
+    }
+
+    if $container {
+      file { '/usr/lib/systemd/system/foreman.service':
+        ensure  => file,
+        content => template('foreman/foreman.service.erb'),
+        mode    => '0644',
+        owner   => 'root',
+        group   => 'root',
+        before  => Service['foreman'],
+      }
     }
   } else {
     $service_ensure  = 'running'

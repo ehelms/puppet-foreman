@@ -62,6 +62,8 @@
 # $passenger_ruby_package::       Package to install to provide Passenger libraries for the active Ruby
 #                                 interpreter
 #
+# $container::                    Runs Foreman as a container
+#
 # $plugin_prefix::                String which is prepended to the plugin package names
 #
 # $servername::                   Server name of the VirtualHost in the webserver
@@ -71,7 +73,7 @@
 # $ssl::                          Enable and set require_ssl in Foreman settings (note: requires passenger, SSL does not apply to kickstarts)
 #
 # $custom_repo::                  No need to change anything here by default
-#                                 if set to true, no repo will be added by this module, letting you 
+#                                 if set to true, no repo will be added by this module, letting you
 #                                 set it to some custom location.
 #
 # $repo::                         This can be stable, nightly or a specific version i.e. 1.7
@@ -223,6 +225,7 @@ class foreman (
   Boolean $authentication = $::foreman::params::authentication,
   Boolean $apache = $::foreman::params::apache,
   Boolean $passenger = $::foreman::params::passenger,
+  Boolean $container = $::foreman::params::container,
   Optional[String] $passenger_ruby = $::foreman::params::passenger_ruby,
   Optional[String] $passenger_ruby_package = $::foreman::params::passenger_ruby_package,
   String $plugin_prefix = $::foreman::params::plugin_prefix,

@@ -15,6 +15,8 @@ class foreman::params {
   $apache         = true
   # configure apache with passenger
   $passenger      = true
+  # configure Foreman to deploy as a container
+  $container      = false
   # Server name of the VirtualHost
   $servername     = $::fqdn
   # Server aliases of the VirtualHost

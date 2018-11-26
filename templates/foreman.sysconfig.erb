@@ -20,3 +20,5 @@ FOREMAN_USE_PASSENGER=<%= scope.lookupvar('::foreman::passenger') ? '1' : '0' %>
 
 # set to 1 if you're using thin as a server
 #FOREMAN_USE_THIN=0
+
+POSTGRES_SERVICE_HOST=<%= scope['foreman::db_host'] %>
