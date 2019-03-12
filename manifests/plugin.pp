@@ -27,6 +27,7 @@ define foreman::plugin(
       mode    => '0644',
       content => $config,
       require => Package[$real_package],
+      before  => Foreman::Rake['db:seed']
     }
   }
 }
